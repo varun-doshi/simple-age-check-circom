@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Snark example</h1>
+    <p>enter age:<input id="age" /></p>
+    <button id="createProofBtn">create proof</button>
+
+    <pre class="proof">Proof: <code id="proof"></code></pre>
+    <pre class="proof">Result: <code id="result"></code></pre>
+
+    <script src="snarkjs.js"></script>
+
+    <script>
+      const proofComponent = document.getElementById("proof");
+      const resultComponent = document.getElementById("result");
+      const createProofComponent = document.getElementById("createProofBtn");
+
+      createProofComponent.addEventListener("click", calculateProof);
+
+      async function calculateProof() {
+        const age = document.getElementById("age").value;
+        console.log(age);
+        const input = { userAge: age, ageLimit: 18 };
+        const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+          input,
+          "../circuits/ageCheck.wasm",
+          "../circuits/ageCheck.zkey"
+        );
+
+        console.log(proof);
+        console.log("sig:", publicSignals);
+
+        const wut = await snarkjs.groth16.exportSolidityCallData(
+          proof,
+          publicSignals
+        );
+        proofComponent.innerHTML = wut;
+
+        const vkey = await fetch("../circuits/ageCheck.vkey.json").then(
+          (res) => {
+            return res.json();
+          }
+        );
+
+        console.log(vkey);
+        console.log(proof);
+        const res = await snarkjs.groth16.verify(vkey, publicSignals, proof);
+        if (publicSignals[0] == "1") {
+          resultComponent.innerHTML = true;
+        } else {
+          resultComponent.innerHTML = false;
+        }
+      }
+    </script>
+  </body>
+</html>
