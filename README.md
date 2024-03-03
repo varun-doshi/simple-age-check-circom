@@ -1,3 +1,6 @@
+Template zk app using Circom with frontend and backend files to gets started easily
+
+
 ```shell
 npx hardhat help
 npx hardhat test
